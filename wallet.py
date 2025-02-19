@@ -1,3 +1,6 @@
+import pytest
+
+
 class Wallet:
     def __init__(self, filename="wallet.txt"):
         self.filename = filename
@@ -53,3 +56,33 @@ if __name__ == "__main__":
             break
         else:
             print("Невірний вибір, спробуйте ще раз.")
+
+
+@pytest.fixture
+def test_wallet(tmp_path):
+    test_file = tmp_path / "test_wallet.txt"
+    return Wallet(filename=str(test_file))
+
+
+def test_initial_balance(test_wallet):
+    assert test_wallet.balance == 0
+
+
+def test_add_transaction(test_wallet):
+    test_wallet.add_transaction(100, "Доход")
+    assert test_wallet.balance == 100
+    assert test_wallet.transactions == ["100 Доход"]
+
+
+def test_add_multiple_transactions(test_wallet):
+    test_wallet.add_transaction(100, "Доход")
+    test_wallet.add_transaction(-50, "Витрати")
+    assert test_wallet.balance == 50
+    assert test_wallet.transactions == ["100 Доход", "-50 Витрати"]
+
+
+def test_save_and_load(test_wallet):
+    test_wallet.add_transaction(200, "Зарплата")
+    test_wallet.load_data()
+    assert test_wallet.balance == 200
+    assert "200 Зарплата" in test_wallet.transactions
